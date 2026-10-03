@@ -1,0 +1,7 @@
+{
+  "source": "https://support.senja.io/rest-api-wbnz4",
+  "checked": "2026-10-03",
+  "sanitizedSnapshotSha256": "89ae413c7d6837fa9429cd6bfdc55626752c87fdd405de751da800c3583811ae",
+  "schemaType": "Reviewed schemas transcribed from current provider documentation; not an official OpenAPI export.",
+  "endpoints": 7
+}

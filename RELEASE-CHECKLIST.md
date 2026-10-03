@@ -1,0 +1,3 @@
+# Release checklist
+
+Check current primary sources and pinned community commit. Typecheck/build,44 tests, eight CLI processes and actual12/6 discovery/direct guards. Review all native arguments,20 FAQ accordions, full client/OS/private auth, fresh1040px actual widget and loaded logo. Scan source/history/allowlisted npm/downloaded desktop; audit production. Match package/lock/manifest/changelog2.0.0,20topics/30keywords, seven source/tag platform CI jobs, annotated default-branch tag and released desktop asset. Verify anonymous named/latest npm installs, actual bundle discovery and Codex config. Publish/read back the entire native CMS guide and inspect live pages. Record provider/GUI/task-token/site-deployment gaps explicitly.

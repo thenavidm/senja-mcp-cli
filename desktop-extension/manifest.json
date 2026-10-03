@@ -1,0 +1,84 @@
+{
+  "manifest_version": "0.2",
+  "name": "senja",
+  "display_name": "Senja MCP Server & CLI",
+  "version": "2.0.0",
+  "description": "12 shared tools for current Senja testimonials, links and invites, isolated project profiles, exact reviewed batches and bounded private exports.",
+  "long_description": "Current public REST companion with shared task CLI and local stdio MCP. Mandatory local confirmation for writes and exports, direct read-only enforcement, isolated Bearer API keys and no browser/session import or automatic retries. Senja also offers its own hosted MCP, including invites and links.",
+  "author": {
+    "name": "Navid Moazzez",
+    "url": "https://navid.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thenavidm/senja-mcp-cli"
+  },
+  "homepage": "https://navid.me/mcp-servers/senja",
+  "documentation": "https://github.com/thenavidm/senja-mcp-cli#readme",
+  "support": "https://github.com/thenavidm/senja-mcp-cli/issues",
+  "license": "AGPL-3.0",
+  "keywords": [
+    "senja",
+    "testimonials",
+    "social-proof",
+    "invites",
+    "mcp",
+    "cli"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "SENJA_API_KEY": "${user_config.api_key}",
+        "SENJA_TOKEN_FILE": "${user_config.token_file}",
+        "SENJA_READ_ONLY": "${user_config.read_only}",
+        "SENJA_ALLOW_DESTRUCTIVE": "${user_config.allow_destructive}"
+      }
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "Intended project API key",
+      "description": "Private Bearer API key from the intended Senja project. Choose this or token_file. Never paste it into a repository.",
+      "sensitive": true,
+      "required": false
+    },
+    "token_file": {
+      "type": "string",
+      "title": "Private API key file",
+      "description": "Absolute owner-private regular non-symlink file outside repositories. Choose instead of api_key; restrict Windows ACLs.",
+      "sensitive": true,
+      "required": false
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read only",
+      "description": "Hide and directly refuse writes, invite emails, batch execution and file exports.",
+      "default": false,
+      "required": false
+    },
+    "allow_destructive": {
+      "type": "boolean",
+      "title": "Allow explicitly confirmed operations",
+      "description": "False refuses confirmed operations too.",
+      "default": true,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=22"
+    }
+  }
+}

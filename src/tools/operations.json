@@ -1,0 +1,580 @@
+[
+  {
+    "name": "list_testimonials",
+    "method": "GET",
+    "path": "/testimonials",
+    "title": "List testimonials",
+    "description": "Read one native page with exact current search, tag, approval, language and date/rating filters.",
+    "group": "testimonials",
+    "risk": "read",
+    "params": [
+      {
+        "name": "sort",
+        "key": "sort",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "date",
+            "rating"
+          ],
+          "description": "Native sort field; direction uses order."
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "order",
+        "key": "order",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "approved",
+        "key": "approved",
+        "schema": {
+          "type": "boolean"
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "rating",
+        "key": "rating",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "type",
+        "key": "type",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "text",
+            "video"
+          ]
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "integration",
+        "key": "integration",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "twitter",
+            "product_hunt",
+            "google",
+            "facebook",
+            "reddit",
+            "capterra",
+            "g2",
+            "linkedin",
+            "app_store",
+            "trustpilot",
+            "shopify",
+            "play_store",
+            "yelp",
+            "slack",
+            "discord",
+            "apple_podcasts",
+            "telegram",
+            "whatsapp",
+            "instagram",
+            "youtube",
+            "tiktok",
+            "appsumo",
+            "amazon",
+            "zillow",
+            "udemy",
+            "chrome_web_store",
+            "airbnb",
+            "skillshare",
+            "realtor",
+            "sourceforge",
+            "whop",
+            "wordpress",
+            "fiverr",
+            "homestars",
+            "web_page"
+          ]
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "tags",
+        "key": "tags",
+        "schema": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nonempty tag name."
+          }
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "query",
+        "key": "query",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Native full-text search, including customer name/email; output may contain personal data.",
+          "maxLength": 10000
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "lang",
+        "key": "lang",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Native ISO 639 language selector.",
+          "maxLength": 10
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "limit",
+        "key": "limit",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Native page size. total counts only the current page."
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      },
+      {
+        "name": "page",
+        "key": "page",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "in": "query",
+        "required": false,
+        "style": "form",
+        "explode": true
+      }
+    ],
+    "bodySchema": null,
+    "bodyRequired": false,
+    "privateOutput": false
+  },
+  {
+    "name": "get_testimonial",
+    "method": "GET",
+    "path": "/testimonials/{testimonial_id}",
+    "title": "Read one testimonial",
+    "description": "Read one exact testimonial, including native video metadata and public/dashboard links.",
+    "group": "testimonials",
+    "risk": "read",
+    "params": [
+      {
+        "name": "testimonial_id",
+        "key": "testimonial_id",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact testimonial ID. No slash, traversal or arbitrary URL."
+        },
+        "in": "path",
+        "required": true,
+        "style": "form",
+        "explode": true
+      }
+    ],
+    "bodySchema": null,
+    "bodyRequired": false,
+    "privateOutput": false
+  },
+  {
+    "name": "create_testimonial",
+    "method": "POST",
+    "path": "/testimonials",
+    "title": "Import a testimonial",
+    "description": "Create one text/video testimonial from an authorized existing customer statement. Explicit approval is required.",
+    "group": "testimonials",
+    "risk": "destructive",
+    "params": [],
+    "bodySchema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": ""
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": ""
+        },
+        "customer_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": ""
+        },
+        "customer_company": {
+          "type": "string",
+          "minLength": 1,
+          "description": ""
+        },
+        "customer_tagline": {
+          "type": "string",
+          "minLength": 1,
+          "description": ""
+        },
+        "customer_username": {
+          "type": "string",
+          "minLength": 1,
+          "description": ""
+        },
+        "form_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": ""
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "HTTPS URL without embedded credentials; provider retrieves media where supported.",
+          "format": "uri"
+        },
+        "thumbnail_url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "HTTPS URL without embedded credentials; provider retrieves media where supported.",
+          "format": "uri"
+        },
+        "customer_avatar": {
+          "type": "string",
+          "minLength": 1,
+          "description": "HTTPS URL without embedded credentials; provider retrieves media where supported.",
+          "format": "uri"
+        },
+        "customer_company_logo": {
+          "type": "string",
+          "minLength": 1,
+          "description": "HTTPS URL without embedded credentials; provider retrieves media where supported.",
+          "format": "uri"
+        },
+        "customer_url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "HTTPS URL without embedded credentials; provider retrieves media where supported.",
+          "format": "uri"
+        },
+        "video_url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "HTTPS URL without embedded credentials; provider retrieves media where supported.",
+          "format": "uri"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "video"
+          ]
+        },
+        "customer_email": {
+          "type": "string",
+          "minLength": 1,
+          "description": "",
+          "format": "email"
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "date": {
+          "type": "string",
+          "minLength": 1,
+          "description": "",
+          "format": "date-time"
+        },
+        "approved": {
+          "type": "boolean",
+          "description": "Explicitly true publishes the testimonial; false keeps it pending."
+        },
+        "integration": {
+          "type": "string",
+          "enum": [
+            "twitter",
+            "product_hunt",
+            "google",
+            "facebook",
+            "reddit",
+            "capterra",
+            "g2",
+            "linkedin",
+            "app_store",
+            "trustpilot",
+            "shopify",
+            "play_store",
+            "yelp",
+            "slack",
+            "discord",
+            "apple_podcasts",
+            "telegram",
+            "whatsapp",
+            "instagram",
+            "youtube",
+            "tiktok",
+            "appsumo",
+            "amazon",
+            "zillow",
+            "udemy",
+            "chrome_web_store",
+            "airbnb",
+            "skillshare",
+            "realtor",
+            "sourceforge",
+            "whop",
+            "wordpress",
+            "fiverr",
+            "homestars",
+            "web_page"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nonempty tag name."
+          }
+        },
+        "media": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "properties": {
+              "alt": {
+                "type": "string",
+                "minLength": 1,
+                "description": ""
+              },
+              "url": {
+                "type": "string",
+                "minLength": 1,
+                "description": "",
+                "format": "uri"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "image",
+                  "video"
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "type",
+        "customer_name"
+      ],
+      "additionalProperties": false
+    },
+    "bodyRequired": true,
+    "privateOutput": false
+  },
+  {
+    "name": "update_testimonial",
+    "method": "PATCH",
+    "path": "/testimonials/{testimonial_id}",
+    "title": "Update approval or tags",
+    "description": "Change only native approval status and tag additions/removals. Text, rating and customer edits remain dashboard-only.",
+    "group": "testimonials",
+    "risk": "destructive",
+    "params": [
+      {
+        "name": "testimonial_id",
+        "key": "testimonial_id",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact testimonial ID. No slash, traversal or arbitrary URL."
+        },
+        "in": "path",
+        "required": true,
+        "style": "form",
+        "explode": true
+      }
+    ],
+    "bodySchema": {
+      "type": "object",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "add_tags": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nonempty tag name."
+          }
+        },
+        "remove_tags": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nonempty tag name."
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "bodyRequired": true,
+    "privateOutput": false
+  },
+  {
+    "name": "delete_testimonial",
+    "method": "DELETE",
+    "path": "/testimonials/{testimonial_id}",
+    "title": "Delete one testimonial",
+    "description": "Permanently delete exactly the requested testimonial. Irreversible; confirmation required.",
+    "group": "testimonials",
+    "risk": "destructive",
+    "params": [
+      {
+        "name": "testimonial_id",
+        "key": "testimonial_id",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact testimonial ID. No slash, traversal or arbitrary URL."
+        },
+        "in": "path",
+        "required": true,
+        "style": "form",
+        "explode": true
+      }
+    ],
+    "bodySchema": null,
+    "bodyRequired": false,
+    "privateOutput": false
+  },
+  {
+    "name": "list_links",
+    "method": "GET",
+    "path": "/links",
+    "title": "Read project links",
+    "description": "Read native form, widget, Wall of Love, quick-link, case-study and sizzle-reel groups with their IDs and URLs.",
+    "group": "project_links",
+    "risk": "read",
+    "params": [],
+    "bodySchema": null,
+    "bodyRequired": false,
+    "privateOutput": false
+  },
+  {
+    "name": "send_invites",
+    "method": "POST",
+    "path": "/invites",
+    "title": "Send form invites",
+    "description": "Send email invites using a selected form and its existing follow-up sequence. Local cap100 recipients, not a documented provider quota.",
+    "group": "invites",
+    "risk": "destructive",
+    "params": [],
+    "bodySchema": {
+      "type": "object",
+      "properties": {
+        "form_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact forms[].id from list_links."
+        },
+        "recipients": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "minLength": 1,
+                "description": "",
+                "format": "email"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": ""
+              }
+            },
+            "required": [
+              "email"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "form_id",
+        "recipients"
+      ],
+      "additionalProperties": false
+    },
+    "bodyRequired": true,
+    "privateOutput": false
+  }
+]
