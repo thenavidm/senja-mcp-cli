@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {ALL_TOOLS} from '../dist/tools/index.js';
 const source=new URL('../src/tools/operations.json',import.meta.url);
-const bytes=fs.readFileSync(source);
+// Git may check out CRLF on Windows; the reviewed snapshot uses LF.
+const bytes=fs.readFileSync(source,'utf8').replace(/\r\n/g,'\n');
 const operations=JSON.parse(bytes);
 const provenance=JSON.parse(fs.readFileSync(new URL('../src/tools/provenance.json',import.meta.url)));
 assert.equal(createHash('sha256').update(bytes).digest('hex'),provenance.sanitizedSnapshotSha256);
