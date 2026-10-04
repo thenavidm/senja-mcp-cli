@@ -1,12 +1,13 @@
 {
   "name": "@thenavidm/senja-mcp-cli",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Senja shared MCP and task CLI for current testimonials, project links, reviewed imports and invites, private accounts and bounded exports.",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
     "senja-mcp": "dist/index.js",
-    "senja-cli": "dist/index.js"
+    "senja-cli": "dist/index.js",
+    "senja-mcp-cli": "dist/npx.js"
   },
   "engines": {
     "node": ">=22"

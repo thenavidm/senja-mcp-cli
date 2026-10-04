@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "senja",
   "display_name": "Senja MCP Server & CLI",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "12 shared tools for current Senja testimonials, links and invites, isolated project profiles, exact reviewed batches and bounded private exports.",
   "long_description": "Current public REST companion with shared task CLI and local stdio MCP. Mandatory local confirmation for writes and exports, direct read-only enforcement, isolated Bearer API keys and no browser/session import or automatic retries. Senja also offers its own hosted MCP, including invites and links.",
   "author": {
