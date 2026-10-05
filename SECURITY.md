@@ -2,6 +2,8 @@
 
 Every create/import, approval/tag update, permanent delete, invite send, reviewed batch execution and private file export requires explicit confirmation through the actual shared handler route. --agent and --yes do not provide --confirm. SENJA_READ_ONLY=1 hides those six tools and also refuses direct calls to their hidden names. SENJA_ALLOW_DESTRUCTIVE=0 refuses them even when confirmed.
 
+Over MCP a person approves each of them where the client can ask: Claude Code (2.1.246 and later) shows its own prompt, and a client that can show forms asks with an approval form whose one box starts unticked. Each approval is signed, bound to that exact call and works once. Where a client can do neither, the model's confirm:true counts. SENJA_CONFIRM=model makes confirm:true enough everywhere, for an agent with no person to ask.
+
 Deletion is permanent. approved true can publish proof. Invites can send real email sequences. Import only actual authorized statements, not invented praise. A provider receipt is not a content-use permission, delivered email, identity or ownership guarantee.
 
 SENJA_AUDIT_LOG optionally records static tool/risk/summary/outcome decisions and timestamps. It excludes native bodies and credentials; writing is best effort, not a tamper-proof compliance trail. Keep the audit destination and parent private. An existing file's permissions are not repaired by the wrapper.

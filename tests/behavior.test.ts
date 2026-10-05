@@ -6,7 +6,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadConfig } from '../src/config.js';
 import { SenjaClient } from '../src/api/client.js';
-import { buildServer } from '../src/server.js';
+import {createApp} from '../src/app.js';import {connect as slipwayConnect} from '@thenavidm/slipway/testing';
+
+/** The write policy comes from the environment on Slipway, as it does in use: this is the one a config describes. */
+function policy(prefix:string,config:{readOnly?:boolean;allowDestructive?:boolean;auditPath?:string}):Record<string,string>{return{...(config.readOnly?{[`${prefix}_READ_ONLY`]:'1'}:{}),...(config.allowDestructive===false?{[`${prefix}_ALLOW_DESTRUCTIVE`]:'0'}:{}),...(config.auditPath?{[`${prefix}_AUDIT_LOG`]:config.auditPath}:{})};}
+/** Slipway's schema check answers in the MCP SDK's own plain text, "Input validation error: …"; these tests read every error as JSON, so it is wrapped as {error}. */
+function jsonError(r:any){const text=r.content?.[0]?.text??'';try{JSON.parse(text);return r;}catch{return{...r,content:[{type:'text',text:JSON.stringify({error:text})}]};}}
+/** The SDK client's calls these tests were written against, over the real Slipway server. A hidden tool is a protocol error there; it comes back as the error result a client sees. */
+function adapt(mcp:Awaited<ReturnType<typeof slipwayConnect>>){return{listTools:async()=>({tools:await mcp.listTools()}),callTool:async({name,arguments:args}:{name:string;arguments?:Record<string,unknown>}):Promise<any>=>{try{const r:any=await mcp.callTool(name,args??{});return r.isError?jsonError(r):r;}catch(e){return{isError:true,content:[{type:'text',text:JSON.stringify({error:(e as Error).message})}]};}},close:()=>mcp.close()};}
+/** One tool call through the real server, as the 2.x guard-and-handler helper made it: the result's data, or its error thrown. */
+async function viaServer(prefix:string,config:any,client:any,name:string,args:Record<string,unknown>):Promise<any>{const mcp=await slipwayConnect(createApp({context:()=>({config,client})}),{env:policy(prefix,config)});try{const r:any=await mcp.callTool(name,args);const text=(r.content as any[])?.[0]?.text??'';if(r.isError)throw new Error(text);try{return JSON.parse(text);}catch{return text;}}finally{await mcp.close();}}
 
 type Call = {url:URL; init:RequestInit};
 async function fixture(options: {readOnly?:boolean; key?:boolean; responder?:(call:Call,index:number)=>Response|Promise<Response>} = {}) {
@@ -14,11 +23,10 @@ async function fixture(options: {readOnly?:boolean; key?:boolean; responder?:(ca
   const config=loadConfig({SENJA_MIN_REQUEST_INTERVAL_MS:'0', ...(options.key===false?{}:{SENJA_API_KEY:'fixture-key-a'}), ...(options.readOnly?{SENJA_READ_ONLY:'1'}:{})});
   const fetcher=(async(url:any,init:RequestInit)=>{const call={url:new URL(String(url)),init};calls.push(call);return options.responder?.(call,calls.length-1)??Response.json({ok:true});}) as typeof fetch;
   const api=new SenjaClient(config,fetcher);
-  const server=buildServer(config,api);
-  const client=new Client({name:'senja-current-api-fixture',version:'1'});
-  const [a,b]=InMemoryTransport.createLinkedPair();await server.connect(a);await client.connect(b);
+  const mcp=await slipwayConnect(createApp({context:()=>({config,client:api})}),{env:policy('SENJA',config)});
+  const client=adapt(mcp);
   const call=async(name:string,args:Record<string,any>={})=>{const result=await client.callTool({name,arguments:args});const value=JSON.parse((result.content as any[])[0].text);return {result,value};};
-  return {client,server,api,calls,call,close:async()=>{await client.close();await server.close();}};
+  return {client,api,calls,call,close:()=>mcp.close()};
 }
 
 describe('current Senja request contract and shared policy',()=>{
@@ -30,7 +38,7 @@ describe('current Senja request contract and shared policy',()=>{
   it('preserves approved:false on a native PATCH',async()=>{const f=await fixture();try{expect((await f.call('update_testimonial',{testimonial_id:'fixture-id',approved:false,confirm:true})).result.isError).toBeFalsy();expect(f.calls[0]!.init.method).toBe('PATCH');expect(JSON.parse(f.calls[0]!.init.body as string)).toEqual({approved:false});}finally{await f.close();}});
   it.each([{}, {text:'unsupported edit'}, {add_tags:[]}, {add_tags:['same'],remove_tags:['same']}])('refuses empty/unsupported/contradictory PATCH%j',async body=>{const f=await fixture();try{expect((await f.call('update_testimonial',{testimonial_id:'fixture-id',...body,confirm:true})).result.isError).toBe(true);expect(f.calls).toHaveLength(0);}finally{await f.close();}});
   it('does not create, tag, delete, invite or export without confirmation',async()=>{const f=await fixture();try{for(const[name,args]of[['create_testimonial',{type:'text',customer_name:'Fixture'}],['update_testimonial',{testimonial_id:'fixture-id',approved:true}],['delete_testimonial',{testimonial_id:'fixture-id'}],['send_invites',{form_id:'fixture-form',recipients:[{email:'fixture@example.com'}]}],['export_testimonials',{output_file:'/private/tmp/never-created-senja.json'}]]as const){expect((await f.call(name,args)).result.isError).toBe(true);}expect(f.calls).toHaveLength(0);}finally{await f.close();}});
-  it('hides writes and refuses a direct hidden-tool call in read-only mode',async()=>{const f=await fixture({readOnly:true});try{expect((await f.client.listTools()).tools).toHaveLength(6);expect(JSON.stringify((await f.call('send_invites',{form_id:'fixture-form',recipients:[{email:'fixture@example.com'}],confirm:true})).value)).toContain('READ_ONLY');expect(f.calls).toHaveLength(0);}finally{await f.close();}});
+  it('hides writes and refuses a direct hidden-tool call in read-only mode',async()=>{const f=await fixture({readOnly:true});try{expect((await f.client.listTools()).tools).toHaveLength(6);expect(JSON.stringify((await f.call('send_invites',{form_id:'fixture-form',recipients:[{email:'fixture@example.com'}],confirm:true})).value)).toMatch(/READ_ONLY|not found/);expect(f.calls).toHaveLength(0);}finally{await f.close();}});
   it('uses the selected form and retains skipped invite receipts without retrying',async()=>{const receipt={sent:1,skipped:[{email:'fixture@example.com',reason:'already_invited'}]};const f=await fixture({responder:()=>Response.json(receipt)});try{const {value}=await f.call('send_invites',{form_id:'fixture-form',recipients:[{email:'fixture@example.com'}],confirm:true});expect(value).toEqual(receipt);expect(f.calls).toHaveLength(1);expect(JSON.parse(f.calls[0]!.init.body as string)).toEqual({form_id:'fixture-form',recipients:[{email:'fixture@example.com'}]});}finally{await f.close();}});
   it('rejects duplicate invite emails and101 recipients locally',async()=>{const f=await fixture();try{for(const recipients of [[{email:'fixture@example.com'},{email:'FIXTURE@example.com'}],Array.from({length:101},(_,i)=>({email:`fixture${i}@example.com`}))])expect((await f.call('send_invites',{form_id:'fixture-form',recipients,confirm:true})).result.isError).toBe(true);expect(f.calls).toHaveLength(0);}finally{await f.close();}});
   it('supports a mutually exclusive native payload/file/flag contract',async()=>{const f=await fixture();try{expect((await f.call('create_testimonial',{payload:{type:'text',customer_name:'Fixture'},customer_name:'Different',confirm:true})).result.isError).toBe(true);expect(f.calls).toHaveLength(0);}finally{await f.close();}});

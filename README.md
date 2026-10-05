@@ -11,7 +11,7 @@
 
 Senja MCP server and CLI for Codex and AI agents. 12 shared tools for current testimonials and invites, isolated private projects, exact reviewed tasks and bounded exports.
 
-One package supplies both task CLI commands and local MCP tools, with a bundled Claude Desktop extension. Built and maintained by [Navid Moazzez](https://navid.me). Full setup is on [navid.me](https://navid.me/mcp-servers/senja).
+One package supplies both task CLI commands and local MCP tools, with a bundled Claude Desktop extension. Built and maintained by [Navid Moazzez](https://navid.me). Built on [Slipway](https://github.com/thenavidm/slipway), which turns one definition of each tool into the MCP server and the CLI. Full setup is on [navid.me](https://navid.me/mcp-servers/senja).
 
 <img src="https://cdn.navid.me/repos/senja-mcp-cli-retina.gif" alt="Illustrated Senja workflow using the actual house terminal component" width="520">
 
@@ -193,7 +193,7 @@ Alternatively install the CLI, make SKILL.md available to Claude, and use shell 
 
 ### Install the .mcpb extension
 
-1. Download `senja-2.0.0.mcpb` from [GitHub Releases](https://github.com/thenavidm/senja-mcp-cli/releases/latest).
+1. Download `senja-3.0.0.mcpb` from [GitHub Releases](https://github.com/thenavidm/senja-mcp-cli/releases/latest).
 2. In a supported Claude Desktop build, open **Settings > Extensions > Advanced settings > Install Extension…** and select it.
 3. Enter a private project API key in the sensitive setting, OR an absolute private token-only file path. Leave the unused method empty. Requests use Authorization: Bearer. Named profiles require private manual runtime settings.
 4. Enable read-only if you want only the 6 read operations. Reconnect and verify the intended project with one deliberate read.
@@ -347,12 +347,13 @@ senja-cli list-testimonials --limit 5 --agent --select total,testimonials.id
 senja-cli schema send-invites
 ~~~
 
---agent requests JSON/compact/no-input/no-color/yes formatting, not confirmation. Repeated array flags collect tags; one --recipients or --tasks flag contains one JSON object. Whole native bodies use payload or an absolute regular non-symlink payload_file capped1MiB. Do not mix body methods.
+--agent requests compact JSON with no prompts and never confirms. `senja-cli which <words>` finds the command for a task. Repeated array flags collect tags; one --recipients or --tasks flag contains one JSON object. Whole native bodies use payload or an absolute regular non-symlink payload_file capped1MiB. Do not mix body methods.
 
 | Exit | Meaning |
 | --- | --- |
 | 0 | Success |
-| 2 | Usage, invalid native input or refused effect |
+| 1 | Unexpected error |
+| 2 | Usage, invalid native input, a refused effect, an unknown command or a hidden write |
 | 3 | Not found |
 | 4 | Authentication/permission |
 | 5 | Native API error |
@@ -363,7 +364,19 @@ senja-cli schema send-invites
 
 MCP clients can load all schemas, defer discovery, or load selected schemas; the mode changes input overhead. CLI use still needs command/schema discovery and model-readable results. --agent and --select can reduce formatting/output for an appropriate task, but do not prove smaller total cost.
 
-Codex is the current verification client. No completed matched provider task/token comparison has been measured for this release. Record actual model/client/package versions, dates, loading settings, prompt/result sizes, successful equivalent outcomes and API usage before publishing numbers. Do not estimate tokens from characters or reuse another client's measurements. Installed skills may incur recurring listing and one-time reading costs, and caching changes billed cost separately from token counts.
+Measured on 2026-10-05 against 2.0.1, with Claude Code 2.1.286 on Claude Opus 5.5 (one short prompt with and without the server connected, the difference read from the API's own usage figures) and Codex 0.159.3 on gpt-6.1-sol:
+
+| Cost | 2.0.1 | 3.0.0 |
+| --- | --- | --- |
+| Claude Code, every tool loaded, every message | 7,900 | 7,551 |
+| Claude Code's default, tool search, every message | 742 | 742 |
+| `SKILL.md`, read once | 2,358 | 2,440 |
+| Codex over the CLI, one task, median of five | 125,564 | 126,370 |
+| Codex over MCP, the same task, median of five | 44,983 | 45,393 |
+
+The task was "find the command that sends testimonial invites, and the flags it requires". Every tool loaded costs less because the testimonial integrations and media are written once. Over the CLI, two 3.0.0 runs asked `which sends testimonial invites`, got the command's help in the answer and took three commands; the other three asked `which testimonial invites`, which fits three commands alike, and took five, as every 2.0.1 run did. The medians are both five-command runs, 806 tokens apart for 3.0.0's longer general help, and over all five runs 3.0.0 averaged 109,209 against 134,461. Over MCP, Codex now prints `create_testimonial` with its argument comments, 1,692 characters more. `SKILL.md` costs 82 more because it says how approval works over MCP and how `which` finds a command, and what exit codes 1 and 2 cover.
+
+Tool-list bytes or characters divided by four are not API usage, and no other offering was measured.
 
 ## 8. Every tool and argument
 
@@ -812,7 +825,7 @@ Create one text/video testimonial from an authorized existing customer statement
 | `media[].url` | string | Required | {"format": "uri"} |
 | `media[].type` | string | Required | {"enum": ["image", "video"]} |
 | `account` | string | Optional | Exact configured private account profile label; not a tenant or provider account ID. |
-| `confirm` | boolean | Optional | Must be true for the requested mutation or exclusive private output file. |
+| `confirm` | boolean | Optional | Set true only when the user asked for exactly this action. |
 | `payload` | object | Optional | Complete native JSON body; do not mix with body flags or payload_file. Arrays use repeated JSON object flags or a whole native array in a private file. |
 | `payload.title` | string | Optional | Exact native/schema value |
 | `payload.text` | string | Optional | Exact native/schema value |
@@ -1457,7 +1470,7 @@ Change only native approval status and tag additions/removals. Text, rating and 
 | `add_tags` | array | Optional | {"maxItems": 100} |
 | `remove_tags` | array | Optional | {"maxItems": 100} |
 | `account` | string | Optional | Exact configured private account profile label; not a tenant or provider account ID. |
-| `confirm` | boolean | Optional | Must be true for the requested mutation or exclusive private output file. |
+| `confirm` | boolean | Optional | Set true only when the user asked for exactly this action. |
 | `payload` | object | Optional | Complete native JSON body; do not mix with body flags or payload_file. Arrays use repeated JSON object flags or a whole native array in a private file. |
 | `payload.approved` | boolean | Optional | Exact native/schema value |
 | `payload.add_tags` | array | Optional | {"maxItems": 100} |
@@ -1616,7 +1629,7 @@ Permanently delete exactly the requested testimonial. Irreversible; confirmation
 | --- | --- | --- | --- |
 | `testimonial_id` | string | Required | Exact testimonial ID. No slash, traversal or arbitrary URL. |
 | `account` | string | Optional | Exact configured private account profile label; not a tenant or provider account ID. |
-| `confirm` | boolean | Optional | Must be true for the requested mutation or exclusive private output file. |
+| `confirm` | boolean | Optional | Set true only when the user asked for exactly this action. |
 
 ~~~bash
 senja-cli delete-testimonial --help
@@ -1736,7 +1749,7 @@ Send email invites using a selected form and its existing follow-up sequence. Lo
 | `recipients[].email` | string | Required | {"format": "email"} |
 | `recipients[].name` | string | Optional | Exact native/schema value |
 | `account` | string | Optional | Exact configured private account profile label; not a tenant or provider account ID. |
-| `confirm` | boolean | Optional | Must be true for the requested mutation or exclusive private output file. |
+| `confirm` | boolean | Optional | Set true only when the user asked for exactly this action. |
 | `payload` | object | Optional | Complete native JSON body; do not mix with body flags or payload_file. Arrays use repeated JSON object flags or a whole native array in a private file. |
 | `payload.form_id` | string | Required | Exact forms[].id from list_links. |
 | `payload.recipients` | array | Required | {"minItems": 1, "maxItems": 100} |
@@ -2030,7 +2043,7 @@ Confirmed one-to-twenty ordered testimonial/import/invite tasks. Prevalidate all
 | `tasks[].tool` | string | Required | {"enum": ["create_testimonial", "update_testimonial", "delete_testimonial", "send_invites"]} |
 | `tasks[].arguments` | object | Required | Actual native tool arguments without account, confirm, payload_file or output_file. |
 | `account` | string | Optional | Exact selected private account profile; binds label, not key ownership. |
-| `confirm` | boolean | Optional | Explicit approval for this exact requested ordered batch. |
+| `confirm` | boolean | Optional | Set true only when the user asked for exactly this action. |
 | `review_sha256` | string | Required | Exact preview_testimonial_batch hash for identical requests, profile label, schema and order. {"pattern": "^[a-f0-9]{64}$"} |
 
 ~~~bash
@@ -2111,7 +2124,7 @@ Confirmed paginated GET export to an exclusive new 0600 JSON file. Stop on short
 | `limit` | integer | Optional | Native page size. total counts only the current page. {"minimum": 1, "maximum": 1000} |
 | `page` | integer | Optional | {"minimum": 1} |
 | `account` | string | Optional | Exact configured private account profile label; not a tenant or provider account ID. |
-| `confirm` | boolean | Optional | Explicit approval for this exact requested ordered batch. |
+| `confirm` | boolean | Optional | Set true only when the user asked for exactly this action. |
 | `start_offset` | integer | Optional | Resume inside the first requested page using an export receipt offset and identical filters/page size. Provider state may have changed. {"minimum": 0, "maximum": 999} |
 | `max_pages` | integer | Optional | Local request budget, default 10. {"minimum": 1, "maximum": 100} |
 | `max_items` | integer | Optional | Local item budget, default 1000. May stop within a page; receipt records an offset. {"minimum": 1, "maximum": 10000} |
@@ -2340,6 +2353,8 @@ To revoke a key, use the intended project's **Automate > Regenerate API Key** as
 
 Every create/import, approval/tag update, permanent delete, invite send, reviewed batch execution and private file export requires explicit confirmation through the actual shared handler route. --agent and --yes do not provide --confirm. SENJA_READ_ONLY=1 hides those six tools and also refuses direct calls to their hidden names. SENJA_ALLOW_DESTRUCTIVE=0 refuses them even when confirmed.
 
+Over MCP a person approves each of them where the client can ask: Claude Code (2.1.246 and later) shows its own prompt, and a client that can show forms asks with an approval form whose one box starts unticked. Each approval is signed, bound to that exact call and works once. Where a client can do neither, the model's confirm:true counts. SENJA_CONFIRM=model makes confirm:true enough everywhere, for an agent with no person to ask.
+
 Deletion is permanent. approved true can publish proof. Invites can send real email sequences. Import only actual authorized statements, not invented praise. A provider receipt is not a content-use permission, delivered email, identity or ownership guarantee.
 
 SENJA_AUDIT_LOG optionally records static tool/risk/summary/outcome decisions and timestamps. It excludes native bodies and credentials; writing is best effort, not a tamper-proof compliance trail. Keep the audit destination and parent private. An existing file's permissions are not repaired by the wrapper.
@@ -2348,7 +2363,7 @@ Keys, recognized secret fields and signed credential URLs are redacted from retu
 
 ## 13. How the two surfaces work
 
-src/tools/index.ts exports shared definitions. MCP registers their schemas/handlers; the unchanged house CLI bridge invokes the actual server through SDK in-memory transport. Both paths share profile selection, native compilation, validation and WriteGuard. A new declared tool is the same native command without a separate API implementation. Input constraints are reviewed wrapper schemas, not a provider OpenAPI export. See src/tools/provenance.json and scripts/check-native-contract.mjs.
+src/tools/index.ts exports shared definitions. [Slipway](https://github.com/thenavidm/slipway) builds the MCP server, over stdio or `--http`, and the CLI from them. Both paths share profile selection, native compilation, validation and the write guard. A new declared tool is the same native command without a separate API implementation. Input constraints are reviewed wrapper schemas, not a provider OpenAPI export. See src/tools/provenance.json and scripts/check-native-contract.mjs.
 
 ## 14. Your data
 
@@ -2371,6 +2386,12 @@ Private exports contain customer data and content. They stay where you explicitl
 | SENJA_AUDIT_LOG | Optional private best-effort static guard decision log |
 | SENJA_REQUEST_TIMEOUT_MS | Default 30000; local accepted range 100–300000 ms |
 | SENJA_MIN_REQUEST_INTERVAL_MS | Default 250; local accepted range 0–10000 ms, not distributed native quota enforcement |
+| SENJA_CONFIRM | human by default; model lets confirm:true alone approve over MCP, for an agent with no person to ask |
+| SENJA_SURFACE | full by default; search lists three tools that find, describe and run the rest |
+| SENJA_TOOL_TIMEOUT_MS | Give up on any tool after this long |
+| SENJA_HTTP_PORT, SENJA_HTTP_HOST, SENJA_HTTP_TOKEN | For --http: port 8787 and host 127.0.0.1 by default; any other host needs the bearer token |
+| SENJA_HTTP_ALLOWED_ORIGINS | Comma-separated browser origins allowed to call --http; a page from any other site is refused |
+| SENJA_DEBUG | 1 prints debug lines on stderr |
 
 ## 16. Updates and removal
 
@@ -2420,18 +2441,19 @@ The verified addition is a shared task CLI/local MCP with isolated named project
 | Project credentials | Unique local profiles, no global credential fallback | Official connector authorization stays native |
 | Ordered changes | Exact local hash, prevalidation, stop on failure | Not a provider-state lock or replacement for client approval |
 | Private export | Bounded pages/items/bytes and exclusive JSON file | Not an atomic complete backup, consent registry or media downloader |
-| Task tokens | Actual matched Codex measurement pending | No percentage or zero-total-token claim |
+| Task tokens | Measured against 2.0.1 in README section 7 | No comparison with another offering |
 
 ## 19. Versions and migration
 
 | Component | Reviewed version |
 | --- | --- |
-| Package/desktop | 2.0.0 |
+| Package/desktop | 3.0.0 |
+| Slipway | 0.1.20 |
 | Native public API | v1; seven endpoints checked 2026-10-03 |
 | Community source | 417445647eac47f94c2d12d9196a68d2e1d22559 |
 | Node | >=22 |
 | Historical private MCP | 1.0.0; three tools |
-| Matched Codex task/token usage | Pending |
+| Matched Codex task/token usage | Measured against 2.0.1 in README section 7 |
 
 | Legacy caller | Current contract | Required change |
 | --- | --- | --- |
@@ -2459,7 +2481,7 @@ Yes. Its hosted connector already searches testimonials, creates proof, retrieve
 <details>
 <summary><b>Why offer this CLI alongside MCP?</b></summary>
 
-The CLI runs the same discovered tools through the same in-memory MCP handlers, input validation and write guard. Scripts can use JSON, field selection and exit codes. A dedicated official task CLI was not identified in the reviewed provider material; that finding is dated, not a permanent absence claim.
+The CLI runs the same tools through the same handlers, input validation and write guard, built by [Slipway](https://github.com/thenavidm/slipway) from each tool's one definition. Scripts can use JSON, field selection and exit codes. A dedicated official task CLI was not identified in the reviewed provider material; that finding is dated, not a permanent absence claim.
 
 </details>
 
@@ -2585,7 +2607,7 @@ The .mcpb includes production dependencies and asks for private sensitive settin
 <details>
 <summary><b>Is the CLI cheaper or better overall?</b></summary>
 
-Actual equivalent successful Codex task/token measurements are pending. MCP loading modes, CLI schema/help discovery, outputs, skills and caching all affect costs. No character-based estimate, universal superiority or zero-total-token claim is published. Proven fixture behavior and actual public artifact checks are listed separately from authenticated outcomes and desktop GUI acceptance.
+In Claude Code the CLI costs nothing until it is used, plus about 2,440 tokens for `SKILL.md` once, where the server costs about 740 tokens a message with tool search and 7,600 with every tool loaded. In Codex, finding the command that sends testimonial invites and its flags took a median of 126,370 input tokens over the CLI and 45,393 over MCP. Section 7 has how each was measured. Proven fixture behavior and actual public artifact checks are listed separately from authenticated outcomes and desktop GUI acceptance.
 
 </details>
 
@@ -2611,7 +2633,7 @@ If this is useful, star the repo and come say hi on [X](https://x.com/thenavidm)
 
 ## Dependencies
 
-Runtime: MCP TypeScript SDK, Ajv and ajv-formats. Development: TypeScript, Vitest, Vite and MCPB. Exact locked versions appear above. Packaging tools are excluded from desktop runtime.
+Runtime: Slipway, which brings the MCP TypeScript SDK, plus Ajv and ajv-formats. Development: TypeScript, Vitest, Vite and MCPB. Exact locked versions appear above. Packaging tools are excluded from desktop runtime.
 
 ## License
 

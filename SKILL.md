@@ -16,7 +16,7 @@ senja-cli send-invites --help
 senja-cli list-testimonials --limit 5 --agent
 ~~~
 
-Every create/import, approval/tag update, permanent delete, invite send, reviewed batch execution and private file export requires explicit confirmation through the actual shared handler route. --agent and --yes do not provide --confirm. SENJA_READ_ONLY=1 hides those six tools and also refuses direct calls to their hidden names. SENJA_ALLOW_DESTRUCTIVE=0 refuses them even when confirmed.
+Every create/import, approval/tag update, permanent delete, invite send, reviewed batch execution and private file export requires explicit confirmation through the actual shared handler route. --agent and --yes do not provide --confirm. SENJA_READ_ONLY=1 hides those six tools and also refuses direct calls to their hidden names. SENJA_ALLOW_DESTRUCTIVE=0 refuses them even when confirmed. Over MCP the person approves each in the client's own prompt or form; confirm:true counts only where the client cannot ask. senja-cli which <words> finds the command for a task.
 
 Deletion is permanent. approved true can publish proof. Invites can send real email sequences. Import only actual authorized statements, not invented praise. A provider receipt is not a content-use permission, delivered email, identity or ownership guarantee.
 
@@ -69,7 +69,8 @@ senja-cli schema send-invites
 | Exit | Meaning |
 | --- | --- |
 | 0 | Success |
-| 2 | Usage, invalid native input or refused effect |
+| 1 | Unexpected error |
+| 2 | Usage, invalid native input, a refused effect, an unknown command or a hidden write |
 | 3 | Not found |
 | 4 | Authentication/permission |
 | 5 | Native API error |

@@ -25,8 +25,8 @@ The verified addition is a shared task CLI/local MCP with isolated named project
 | Project credentials | Unique local profiles, no global credential fallback | Official connector authorization stays native |
 | Ordered changes | Exact local hash, prevalidation, stop on failure | Not a provider-state lock or replacement for client approval |
 | Private export | Bounded pages/items/bytes and exclusive JSON file | Not an atomic complete backup, consent registry or media downloader |
-| Task tokens | Actual matched Codex measurement pending | No percentage or zero-total-token claim |
+| Task tokens | Measured against 2.0.1 in README section 7 | No comparison with another offering |
 
 MCP clients can load all schemas, defer discovery, or load selected schemas; the mode changes input overhead. CLI use still needs command/schema discovery and model-readable results. --agent and --select can reduce formatting/output for an appropriate task, but do not prove smaller total cost.
 
-Codex is the current verification client. No completed matched provider task/token comparison has been measured for this release. Record actual model/client/package versions, dates, loading settings, prompt/result sizes, successful equivalent outcomes and API usage before publishing numbers. Do not estimate tokens from characters or reuse another client's measurements. Installed skills may incur recurring listing and one-time reading costs, and caching changes billed cost separately from token counts.
+README section 7 has this package's measured Claude Code and Codex costs against 2.0.1. No other offering was measured, so no comparison with one is claimed.
